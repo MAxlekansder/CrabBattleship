@@ -14,11 +14,11 @@ pub fn start_game() {
 
         display_board(&player_board, &opponent_board);
 
-        if handle_opponent_turn(&mut opponent_board) {
+        if handle_player_turn(&mut opponent_board) {
             break;
         }
 
-        if handle_player_turn(&mut player_board) {
+        if handle_opponent_turn(&mut player_board) {
             break;
         }
     }
