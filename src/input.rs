@@ -31,3 +31,12 @@ pub fn generate_opponent_move() -> (usize, usize){
     let mut rng = rand::thread_rng();
     (rng.gen_range(0..BOARD_SIZE), rng.gen_range(0..BOARD_SIZE))
 }
+
+pub fn get_player_name(player_id: u8) -> String {
+    print!("Enter name for player {} ", player_id);
+
+    io::stdout().flush().unwrap();
+    let mut name = String::new();
+    io::stdin().read_line(&mut name).expect("failed to read line");
+    name.trim().to_string()
+}

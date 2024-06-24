@@ -1,8 +1,11 @@
 use std::io;
 use crate::board::{Board, CellState};
-use crate::input::{get_player_input, generate_opponent_move};
+use crate::input::{get_player_input, generate_opponent_move, get_player_name};
 
 pub fn start_game() {
+    let player_name = get_player_name(1);
+    let opponent_name = get_player_name(2);
+
     let mut player_board = Board::new();
     let mut opponent_board = Board::new();
 
@@ -12,25 +15,25 @@ pub fn start_game() {
     loop {
         clear_screen();
 
-        display_board(&player_board, &opponent_board);
+        display_board(&player_board, &opponent_board, &player_name, &opponent_name);
 
-        if handle_player_turn(&mut opponent_board) {
+        if handle_player_turn(&mut opponent_board, &opponent_name) {
             break;
         }
 
-        if handle_opponent_turn(&mut player_board) {
+        if handle_opponent_turn(&mut player_board, &player_name) {
             break;
         }
     }
 
 
-    fn handle_player_turn(opponent_board: &mut Board) -> bool {
+    fn handle_player_turn(opponent_board: &mut Board, player_name: &str) -> bool {
         let (player_row, player_col) = get_player_input();
         let result = opponent_board.fire(player_row, player_col);
 
         match result {
-            CellState::Miss => println!("\x1b[36mYou missed!\x1b[0m"),
-            CellState::Hit => eprintln!("\x1b[31mYou hit a ship!\x1b[0m"),
+            CellState::Miss =>  println!("\x1b[36m{} missed!\x1b[0m", player_name),
+            CellState::Hit =>   println!("\x1b[31m{} hit one of your ships!\x1b[0m", player_name),
             _ => (),
         }
 
@@ -45,13 +48,13 @@ pub fn start_game() {
     }
 
 
-    fn handle_opponent_turn(player_board: &mut Board) -> bool {
+    fn handle_opponent_turn(player_board: &mut Board, opponent_name: &str) -> bool {
 
         let (opponent_row, opponent_col) = generate_opponent_move();
         let result = player_board.fire(opponent_row, opponent_col);
         match result {
-            CellState::Miss => println!("\x1b[36mOpponent missed!\x1b[0m"),
-            CellState::Hit => eprintln!("\x1b[31mThe opponent hit one of your ships!\x1b[0m"),
+            CellState::Miss =>  println!("\x1b[36m{} missed!\x1b[0m", opponent_name),
+            CellState::Hit =>   println!("\x1b[31m{} hit one of your ships!\x1b[0m", opponent_name),
             _ => (),
         }
 
@@ -66,10 +69,11 @@ pub fn start_game() {
     }
 
 
-    fn display_board(player_board: &Board, opponent_board: &Board) {
-        println!("\x1b[1;37mYour board:\x1b[0m");
+    fn display_board(player_board: &Board, opponent_board: &Board, player_name: &str, opponent_name: &str) {
+        println!("\x1b[1;37m{} board:\x1b[0m", player_name);
         player_board.display(false);
-        println!("\x1b[1;37mOpponents board:\x1b[0m");
+
+        println!("\x1b[1;37m{} board:\x1b[0m", opponent_name);
         opponent_board.display(true);
     }
 
