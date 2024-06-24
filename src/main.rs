@@ -38,8 +38,8 @@ impl Board {
                 for i in 0..size {
                     let (r, c) = if direction { (row, col + i) } else { (row + i, col) };
 
-                    self.grid[r][c] == CellState::Ship;
-                    self.ships.push((r,c))
+                    self.grid[r][c] = CellState::Ship;
+                    self.ships.push((r,c));
                 }
                 break;
             }
@@ -49,17 +49,19 @@ impl Board {
 
 
     fn can_place_ship(&self, row: usize, col: usize, size: usize, direction: bool) -> bool {       // check if ship can be placed
+
         if direction {
             if col + size > BOARD_SIZE { return false; }
             for i in 0..size {
                 if self.grid[row][col + i] != CellState::Empty { return false; }
+                }
+
+            } else {
+                if row + size > BOARD_SIZE { return false; }
+                for i in 0..size {
+                    if self.grid[row + i][col] != CellState::Empty { return false; }
+                }
             }
-        } else {
-            if row + size > BOARD_SIZE { return false; }
-            for i in 0..size {
-                if self.grid[row + i][col] != CellState::Empty { return false; }
-            }
-        }
         true
     }
 
@@ -97,7 +99,7 @@ impl Board {
                     CellState::Miss => print!("\x1b[36m \u{00B7} \x1b[0m"),
                 }
             }
-            println!();;
+            println!();
         }
     }
 
@@ -108,7 +110,61 @@ impl Board {
 
 
 fn main() {
+
+    let mut player_board = Board::new();
+    let mut opponent_board = Board::new();
+
+    player_board.place_ship(5);
+    player_board.place_ship(4);
+    player_board.place_ship(3);
+    player_board.place_ship(2);
+
+    opponent_board.place_ship(5);
+    opponent_board.place_ship(4);
+    opponent_board.place_ship(3);
+    opponent_board.place_ship(2);
+
+
     loop {
+        print!("\x1b[2J\x1b[1;1H");
+
+        println!("\x1b[1;37mYour board:\x1b[0m");
+        player_board.display(false);
+        println!("\x1b[1;37mOpponents board:\x1b[0m");
+        opponent_board.display(true);
+
+        let (player_row, player_col) = get_player_input();
+        let result = opponent_board.fire(player_row, player_col);
+
+        match result {
+            CellState::Miss => println!("\x1b[36mYou missed!\x1b[0m"),
+            CellState::Hit => eprintln!("\x1b[31mYou hit a ship!\x1b[0m"),
+            _ => (),
+        }
+
+        println!("Press enter to continue...");
+        io::stdin().read_line(&mut String::new()).expect("failed to read line");
+
+        if opponent_board.is_game_over() {
+            println!("\x1b[1;32mYou won the game!\x1b[0m");
+            break;
+        }
+
+        if player_board.is_game_over() {
+            println!("\x1b[1;31mYou lost the game!\x1b[0m");
+            break;
+        }
+
+        let (opponent_row, opponent_col) = generate_opponent_move();
+        let result = player_board.fire(opponent_row, opponent_col);
+        match result {
+            CellState::Miss => println!("\x1b[36mOpponent missed!\x1b[0m"),
+            CellState::Hit => eprintln!("\x1b[31mThe opponent hit one of your ships!\x1b[0m"),
+            _ => (),
+        }
+
+        println!("Press enter to continue...");
+        io::stdin().read_line(&mut String::new()).expect("Failed to read input");
 
     }
 }
@@ -120,10 +176,27 @@ fn main() {
 
 // method for game over
 
-fn get_player_input() {
+fn get_player_input() -> (usize, usize) {
+    loop {
+        print!("\x1b[1;37mEnter coordinates to fire (row, col): \x1b[0m");
+        io::stdout().flush().unwrap();
+        let mut input: String = String::new();
+        io::stdin().read_line(&mut input).expect("failed to read line");
 
+       let coordinates: Vec<usize> = input.trim()
+           .split(',')
+           .map(|s: &str| s.trim().parse().expect("invalid input"))
+           .collect();
+
+        if coordinates.len() == 2 && coordinates[0] < BOARD_SIZE && coordinates[1] < BOARD_SIZE {
+            return (coordinates[0], coordinates[1]);
+        } else {
+            println!("\x1b[1;31mInvalid inout. Please enter row and column numbers separeted by comma.\x1b[0bm")
+        }
+    }
 }
 
-fn generate_opponent_move() {
-
+fn generate_opponent_move() -> (usize, usize){
+    let mut rng = rand::thread_rng();
+    (rng.gen_range(0..BOARD_SIZE), rng.gen_range(0..BOARD_SIZE))
 }
