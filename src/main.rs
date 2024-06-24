@@ -183,16 +183,19 @@ fn get_player_input() -> (usize, usize) {
         let mut input: String = String::new();
         io::stdin().read_line(&mut input).expect("failed to read line");
 
-       let coordinates: Vec<usize> = input.trim()
+       let coordinates: Vec<Result<usize, _>> = input.trim()
            .split(',')
-           .map(|s: &str| s.trim().parse().expect("invalid input"))
+           .map(|s: &str| s.trim().parse())
            .collect();
 
-        if coordinates.len() == 2 && coordinates[0] < BOARD_SIZE && coordinates[1] < BOARD_SIZE {
-            return (coordinates[0], coordinates[1]);
-        } else {
-            println!("\x1b[1;31mInvalid inout. Please enter row and column numbers separeted by comma.\x1b[0bm")
+        if coordinates.len() == 2 {
+            if let (Ok(row), Ok(col)) = (coordinates[0].clone(), coordinates[1].clone()) {
+                if row < BOARD_SIZE && col < BOARD_SIZE {
+                    return (row, col);
+                }
+            }
         }
+        println!("\x1b[1;31mInvalid inout. Please enter row and column numbers separeted by comma.\x1b[0bm")
     }
 }
 
