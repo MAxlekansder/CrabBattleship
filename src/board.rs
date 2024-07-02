@@ -41,7 +41,6 @@ impl Board {
                 }
                 break;
             }
-
         }
     }
 
